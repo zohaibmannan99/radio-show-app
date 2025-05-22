@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, Button, StyleSheet, Image, Linking } from 'react-native';
+import { View, Text, Button, StyleSheet, Image, Linking, ActivityIndicator } from 'react-native';
 import { Audio } from 'expo-av';
 
 // Replace this with your actual stream URL
 const STREAM_URL = 'https://streamer.radio.co/s50c2f04ea/listen';
 
 export default function App() {
+  const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const sound = useRef<Audio.Sound | null>(null);
@@ -34,6 +35,7 @@ export default function App() {
   }, [isPlaying]);
 
   const playStream = async () => {
+    setIsLoading(true);
     try {
       console.log('▶️ playStream called');
       const { sound: playbackObj } = await Audio.Sound.createAsync(
@@ -44,6 +46,9 @@ export default function App() {
       setIsPlaying(true);
     } catch (error) {
       console.error('❌ Error playing stream:', error);
+    }
+    finally {
+      setIsLoading(false);
     }
   };
 
@@ -67,11 +72,16 @@ export default function App() {
     <View style={styles.container}>
       <Image source={require('./assets/logo.png')} style={styles.logo} />
       <Text style={styles.title}>🎙️ Catch Some Z'z</Text>
+      {isLoading ? (
+      <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
       <Button
         key={refreshKey}
         title={isPlaying ? 'Stop' : 'Play'}
         onPress={isPlaying ? stopStream : playStream}
+        disabled={isLoading}
       />
+      )}
       <Text style={styles.info}>Streaming live via Radio.co</Text>
       <Text
         style={styles.link}
